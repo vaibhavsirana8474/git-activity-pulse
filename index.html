@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git Commit Sentiment & Activity Pulse</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js CDN for data visualization. Open source library for data visualisation -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Git Commit Pulse & Sentiment Tracker</h1>
+      <p>Analyze developer velocity, late-night crunch hours, and commit sentiment.</p>
+    </header>
+
+
+    <section class="search-box">
+      <input type="text" id="ownerInput" placeholder="Repo Owner Name" />
+      <input type="text" id="repoInput" placeholder="Repo Name" />
+      <button id="analyzeBtn">Analyze Repository</button>
+    </section>
+
+    <div id="status" class="status"></div>
+
+    <section class="outputStatus" id="outputStatus" style="display: none;">
+      <div class="card">
+        <h3>Total Commits</h3>
+        <p id="totalCommits">0</p>
+      </div>
+      <div class="card">
+        <h3>Overall Sentiment</h3>
+        <p id="totalSentiment">--</p>
+      </div>
+      <div class="card">
+        <h3>Late Night Crunch Rate</h3>
+        <p id="crunchRate">0%</p>
+      </div>
+      <div class="card">
+        <h3>Top Contributor</h3>
+        <p id="topContributor">--</p>
+      </div>
+    </section>
+
+    <section class="outputChart" id="outputChart" style="display: none;">
+      <div class="chart-container">
+        <h3>Activity Heatmap (Hour of Day)</h3>
+        <canvas id="activityChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Commit Sentiment Trend</h3>
+        <canvas id="sentimentChart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
