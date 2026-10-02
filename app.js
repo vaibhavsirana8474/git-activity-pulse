@@ -31,16 +31,23 @@ function scoreSentiment(message) {
 document.getElementById("analyzeBtn").addEventListener("click", () => {
   const owner = document.getElementById("ownerInput").value.trim();
   const repo = document.getElementById("repoInput").value.trim();
-  const status = document.getElementById("status");
+  const spinner = document.getElementById("loadingSpinner");
+  const statusText = document.getElementById("statusText");
 
   if (!owner || !repo) {
-    status.textContent = "Please enter both owner and repository name.";
-    status.style.color = "red";
+    spinner.style.display = "none";
+    statusText.textContent = "Please enter both owner and repository name.";
+    statusText.style.color = "red";
     return;
   }
 
-  status.textContent = `Fetching commits for ${owner}/${repo}...`;
-  status.style.color = "#555";
+  spinner.style.display = "inline-block";
+  statusText.textContent = `Fetching commits for ${owner}/${repo}...`;
+  statusText.style.color = "#555";
+
+
+  document.getElementById("outputStatus").style.display = "none";
+  document.getElementById("outputChart").style.display = "none";
 
   fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=100`)
     .then(res => {
@@ -48,17 +55,20 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
       return res.json();
     })
     .then(commits => {
+      spinner.style.display = "none";
       if (!commits || commits.length === 0) {
-        status.textContent = "No commits found in this repository.";
+        statusText.textContent = "No commits found in this repository.";
+        statusText.style.color = "orange";
         return;
       }
       processCommitData(commits);
-      status.textContent = `Successfully analyzed last ${commits.length} commits.`;
-      status.style.color = "green";
+      statusText.textContent = `Successfully analyzed last ${commits.length} commits.`;
+      statusText.style.color = "green";
     })
     .catch(err => {
-      status.textContent = err.message;
-      status.style.color = "red";
+      spinner.style.display = "none";
+      statusText.textContent = err.message;
+      statusText.style.color = "red";
     });
 });
 

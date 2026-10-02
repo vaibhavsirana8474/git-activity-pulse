@@ -22,7 +22,10 @@
       <button id="analyzeBtn">Analyze Repository</button>
     </section>
 
-    <div id="status" class="status"></div>
+    <div class="status">
+      <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+      <span id="statusText">Enter a repository to start analysis.</span>
+    </div>
 
     <section class="outputStatus" id="outputStatus" style="display: none;">
       <div class="card">
