@@ -123,7 +123,9 @@ function processCommitData(commits) {
   document.getElementById("outputStatus").style.display = "grid";
   document.getElementById("outputChart").style.display = "grid";
 
-  renderCharts(hourCounts, sentiments.reverse());
+  renderCharts(hourCounts, sentiments);
+  renderTable(sentiments, commits);
+  document.getElementById("commitSection").style.display = "block";
 }
 
 function renderCharts(hourCounts, sentimentData) {
@@ -178,4 +180,41 @@ function renderCharts(hourCounts, sentimentData) {
       }
     }
   });
+}
+
+function renderTable(sentiments, rawCommits) {
+  const tableBody = document.getElementById("commitTableBody");
+  tableBody.innerHTML = "";
+
+  sentiments.forEach((item, index) => {
+    const rawCommit = rawCommits[rawCommits.length - 1 - index];
+    const author = rawCommit.commit.author.name || "Unknown";
+    const message = item.message;
+    const score = item.score;
+
+    let badgeClass = "badge-neutral";
+    let badgeText = "Neutral";
+    if (score > 0.1) {
+      badgeClass = "badge-positive";
+      badgeText = `Positive (${score})`;
+    } else if (score < -0.1) {
+      badgeClass = "badge-negative";
+      badgeText = `Frustrated (${score})`;
+    } else {
+      badgeText = `Neutral (${score})`;
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>#${item.index}</td>
+      <td><strong>${escapeHtml(author)}</strong></td>
+      <td>${escapeHtml(message)}</td>
+      <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

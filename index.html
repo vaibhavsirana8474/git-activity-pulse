@@ -56,6 +56,36 @@
         <canvas id="sentimentChart"></canvas>
       </div>
     </section>
+
+    <section class="outputChart" id="outputChart" style="display: none;">
+      <div class="chart-container">
+        <h3>Activity Heatmap (Hour of Day)</h3>
+        <canvas id="activityChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Commit Sentiment Trend</h3>
+        <canvas id="sentimentChart"></canvas>
+      </div>
+    </section>
+
+    <section class="commit-section" id="commitSection" style="display: none;">
+      <h3>Recent Commits & Sentiment Breakdown</h3>
+      <div class="table-responsive">
+        <table id="commitTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Author</th>
+              <th>Commit Message</th>
+              <th>Sentiment</th>
+            </tr>
+          </thead>
+          <tbody id="commitTableBody">
+            <!-- Dynamically injected via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <script src="app.js"></script>
