@@ -104,6 +104,32 @@ header p {
   margin-bottom: 24px;
 }
 
+
+.downloadOption {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.btn-secondary {
+  background-color: #f2f3f5;
+  color: #161515;
+  border: 2px solid black;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #0969da;
+  color: white;
+  border: 2px solid #0969da;
+}
+
 .card {
   background: #fff;
   padding: 18px;

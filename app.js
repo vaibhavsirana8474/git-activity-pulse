@@ -1,5 +1,6 @@
 let activityChartInstance = null;
 let sentimentChartInstance = null;
+let currentCommitData = [];
 
 // Lightweight AFINN-based Sentiment Lexicon for Commit Messages
 const sentimentDictionary = {
@@ -73,6 +74,14 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
 });
 
 function processCommitData(commits) {
+  currentCommitData = commits.map((item, index) => {
+  const message = item.commit.message.replace(/"/g, '""'); // Escape double quotes for CSV
+  const author = item.commit.author.name || "Unknown";
+  const date = item.commit.author.date;
+  const score = scoreSentiment(item.commit.message);
+  return { index: commits.length - index, author, date, message, score };
+});
+
   const hourCounts = new Array(24).fill(0);
   const sentiments = [];
   const authorCounts = {};
@@ -218,3 +227,28 @@ function renderTable(sentiments, rawCommits) {
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+document.getElementById("exportCsvBtn").addEventListener("click", () => {
+  if (!currentCommitData || currentCommitData.length === 0) return;
+
+  let csvRows = ["Commit #,Author,Date,Sentiment Score,Commit Message"];
+
+  currentCommitData.forEach(row => {
+    const safeMessage = `"${row.message.replace(/"/g, '""')}"`;
+    csvRows.push(`${row.index},"${row.author}","${row.date}",${row.score},${safeMessage}`);
+  });
+
+  const csvString = csvRows.join("\n");
+  
+
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  
+  link.setAttribute("href", url);
+  link.setAttribute("download", "git_commit_sentiment_export.csv");
+  document.body.appendChild(link);
+  
+  link.click();
+  document.body.removeChild(link);
+});
