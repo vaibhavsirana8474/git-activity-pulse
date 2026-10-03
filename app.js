@@ -1,6 +1,7 @@
 let activityChartInstance = null;
 let sentimentChartInstance = null;
 let currentCommitData = [];
+let rawCommitsCache = [];
 
 // Lightweight AFINN-based Sentiment Lexicon for Commit Messages
 const sentimentDictionary = {
@@ -62,6 +63,11 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
         statusText.style.color = "orange";
         return;
       }
+      rawCommitsCache = commits;
+      processCommitData(commits);
+      setupAuthorDropdown(commits);
+      statusText.textContent = `Successfully analyzed last ${commits.length} commits.`;
+      statusText.style.color = "green";
       processCommitData(commits);
       statusText.textContent = `Successfully analyzed last ${commits.length} commits.`;
       statusText.style.color = "green";
@@ -251,4 +257,34 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
   
   link.click();
   document.body.removeChild(link);
+});
+
+// Populate the select dropdown with unique authors
+function setupAuthorDropdown(commits) {
+  const select = document.getElementById("authorSelect");
+  select.innerHTML = '<option value="all">All Contributors</option>';
+
+  const authors = [...new Set(commits.map(item => item.commit.author.name || "Unknown"))];
+
+  authors.sort().forEach(author => {
+    const option = document.createElement("option");
+    option.value = author;
+    option.textContent = author;
+    select.appendChild(option);
+  });
+
+  document.getElementById("filterSection").style.display = "flex";
+}
+
+document.getElementById("authorSelect").addEventListener("change", (e) => {
+  const selectedAuthor = e.target.value;
+  if (selectedAuthor === "all") {
+    processCommitData(rawCommitsCache);
+  } else {
+    const filteredCommits = rawCommitsCache.filter(item => {
+      const author = item.commit.author.name || "Unknown";
+      return author === selectedAuthor;
+    });
+    processCommitData(filteredCommits);
+  }
 });

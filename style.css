@@ -104,7 +104,6 @@ header p {
   margin-bottom: 24px;
 }
 
-
 .downloadOption {
   grid-column: 1 / -1;
   display: flex;
@@ -113,7 +112,7 @@ header p {
 }
 
 .btn-secondary {
-  background-color: #f2f3f5;
+  background-color: white;
   color: #161515;
   border: 2px solid black;
   padding: 8px 16px;
@@ -151,6 +150,43 @@ header p {
   color: #222;
 }
 
+.filter-section {
+  grid-column: 1 / -1;
+  background: #fff;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  margin-top: 24px;
+  margin-bottom: -16px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.filter-container select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+  font-size: 0.9rem;
+  background-color: #f6f8fa;
+  color: #24292f;
+  cursor: pointer;
+  flex-grow: 1;
+  max-width: 300px;
+}
+
+.filter-container select:focus {
+  outline: none;
+  border-color: #0969da;
+  background-color: #fff;
+}
+
 .outputChart {
   display: grid;
   grid-template-columns: 1fr;
@@ -170,7 +206,6 @@ header p {
   color: #333;
 
 }
-
 
 .commitsection {
   background: #fff;
