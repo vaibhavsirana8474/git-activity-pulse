@@ -187,6 +187,52 @@ header p {
   background-color: #fff;
 }
 
+/* Filter Layout Adjustments */
+.filter-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-group input[type="date"] {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+  font-size: 0.85rem;
+  background-color: #f6f8fa;
+  color: #24292f;
+}
+
+.filter-group input[type="date"]:focus {
+  outline: none;
+  border-color: #0969da;
+  background-color: #fff;
+}
+
+.btn-reset {
+  background-color: #f6f8fa;
+  color: #57606a;
+  border: 1px solid #d0d7de;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+  background-color: #cfd7d3;
+  color: #24292f;
+}
+
 .outputChart {
   display: grid;
   grid-template-columns: 1fr;

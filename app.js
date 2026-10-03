@@ -139,7 +139,7 @@ function processCommitData(commits) {
   document.getElementById("outputChart").style.display = "grid";
 
   renderCharts(hourCounts, sentiments);
-  renderTable(sentiments, commits);
+  renderTable(sentiments);
   document.getElementById("commitSection").style.display = "block";
 }
 
@@ -197,13 +197,12 @@ function renderCharts(hourCounts, sentimentData) {
   });
 }
 
-function renderTable(sentiments, rawCommits) {
+function renderTable(sentiments) {
   const tableBody = document.getElementById("commitTableBody");
   tableBody.innerHTML = "";
 
-  sentiments.forEach((item, index) => {
-    const rawCommit = rawCommits[rawCommits.length - 1 - index];
-    const author = rawCommit.commit.author.name || "Unknown";
+  sentiments.forEach((item) => {
+    const author = item.author || "Unknown";
     const message = item.message;
     const score = item.score;
 
@@ -259,13 +258,15 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
   document.body.removeChild(link);
 });
 
+// --- NEW UNIFIED FILTER CODE (Author + Date Range) ---
+
 // Populate the select dropdown with unique authors
 function setupAuthorDropdown(commits) {
   const select = document.getElementById("authorSelect");
   select.innerHTML = '<option value="all">All Contributors</option>';
-
+  
   const authors = [...new Set(commits.map(item => item.commit.author.name || "Unknown"))];
-
+  
   authors.sort().forEach(author => {
     const option = document.createElement("option");
     option.value = author;
@@ -276,15 +277,48 @@ function setupAuthorDropdown(commits) {
   document.getElementById("filterSection").style.display = "flex";
 }
 
-document.getElementById("authorSelect").addEventListener("change", (e) => {
-  const selectedAuthor = e.target.value;
-  if (selectedAuthor === "all") {
-    processCommitData(rawCommitsCache);
-  } else {
-    const filteredCommits = rawCommitsCache.filter(item => {
-      const author = item.commit.author.name || "Unknown";
-      return author === selectedAuthor;
-    });
-    processCommitData(filteredCommits);
-  }
+// Master Filter Function combining Author & Date Range
+function applyFilters() {
+  if (!rawCommitsCache || rawCommitsCache.length === 0) return;
+
+  const selectedAuthor = document.getElementById("authorSelect").value;
+  const startDateVal = document.getElementById("startDate").value;
+  const endDateVal = document.getElementById("endDate").value;
+
+  const filtered = rawCommitsCache.filter(item => {
+    // 1. Author Check
+    const author = item.commit.author.name || "Unknown";
+    const matchesAuthor = (selectedAuthor === "all" || author === selectedAuthor);
+
+    // 2. Date Range Check
+    const commitDate = new Date(item.commit.author.date);
+    let matchesStartDate = true;
+    let matchesEndDate = true;
+
+    if (startDateVal) {
+      const startDate = new Date(startDateVal);
+      startDate.setHours(0, 0, 0, 0);
+      matchesStartDate = commitDate >= startDate;
+    }
+
+    if (endDateVal) {
+      const endDate = new Date(endDateVal);
+      endDate.setHours(23, 59, 59, 999);
+      matchesEndDate = commitDate <= endDate;
+    }
+
+    return matchesAuthor && matchesStartDate && matchesEndDate;
+  });
+
+  processCommitData(filtered);
+}
+
+document.getElementById("authorSelect").addEventListener("change", applyFilters);
+document.getElementById("startDate").addEventListener("change", applyFilters);
+document.getElementById("endDate").addEventListener("change", applyFilters);
+
+document.getElementById("resetDateBtn").addEventListener("click", () => {
+  document.getElementById("startDate").value = "";
+  document.getElementById("endDate").value = "";
+  applyFilters();
 });

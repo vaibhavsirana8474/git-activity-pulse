@@ -50,13 +50,27 @@
         <p id="topContributor">--</p>
       </div>
     </section>
-    
+
       <section class="filter-section" id="filterSection" style="display: none;">
       <div class="filter-container">
-        <label for="authorSelect"><strong>Filter by Contributor:</strong></label>
-        <select id="authorSelect">
-          <option value="all">All Contributors</option>
-        </select>
+        <!-- Author Filter -->
+        <div class="filter-group">
+          <label for="authorSelect"><strong>Contributor:</strong></label>
+          <select id="authorSelect">
+            <option value="all">All Contributors</option>
+          </select>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="filter-group">
+          <label for="startDate"><strong>From:</strong></label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="filter-group">
+          <label for="endDate"><strong>To:</strong></label>
+          <input type="date" id="endDate">
+        </div>
+        <button id="resetDateBtn" class="btn-reset">Reset Dates</button>
       </div>
     </section>
 
@@ -71,16 +85,7 @@
       </div>
     </section>
 
-    <section class="outputChart" id="outputChart" style="display: none;">
-      <div class="chart-container">
-        <h3>Activity Heatmap (Hour of Day)</h3>
-        <canvas id="activityChart"></canvas>
-      </div>
-      <div class="chart-container">
-        <h3>Commit Sentiment Trend</h3>
-        <canvas id="sentimentChart"></canvas>
-      </div>
-    </section>
+    
 
     <section class="commit-section" id="commitSection" style="display: none;">
       <h3>Recent Commits & Sentiment Breakdown</h3>
