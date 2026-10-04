@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Chart.js CDN for data visualization. Open source library for data visualisation -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Mermaid.js CDN for architecture diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -83,9 +85,17 @@
         <h3>Commit Sentiment Trend</h3>
         <canvas id="sentimentChart"></canvas>
       </div>
-    </section>
 
-    
+      <div class="chart-container diagram-card">
+        <h3>Repository Architecture & File Map</h3>
+        <p class="diagram-subtitle">Visual hierarchy of top-level folders and key files.</p>
+        <div class="diagram-container resizable-diagram-container">
+          <pre class="mermaid" id="mermaidDiagram">
+            <!-- Dynamically generated Mermaid flowchart code goes here -->
+          </pre>
+        </div>
+      </div>
+    </section>
 
     <section class="commit-section" id="commitSection" style="display: none;">
       <h3>Recent Commits & Sentiment Breakdown</h3>

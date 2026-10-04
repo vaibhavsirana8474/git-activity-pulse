@@ -70,7 +70,7 @@ header p {
   background-color: #044289;
 }
 
-.status{
+.status {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,7 +80,6 @@ header p {
   color: #555;
   min-height: 30px;
 }
-
 
 .spinner {
   width: 20px;
@@ -165,7 +164,8 @@ header p {
 .filter-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
   width: 100%;
 }
 
@@ -185,15 +185,6 @@ header p {
   outline: none;
   border-color: #0969da;
   background-color: #fff;
-}
-
-/* Filter Layout Adjustments */
-.filter-container {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  width: 100%;
 }
 
 .filter-group {
@@ -237,6 +228,7 @@ header p {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
+  height: auto;
 }
 
 .chart-container {
@@ -250,7 +242,59 @@ header p {
   font-size: 1.1rem;
   margin-bottom: 14px;
   color: #333;
+}
 
+.diagram-card {
+  grid-column: 1 / -1;
+  height: auto !important;
+}
+
+.diagram-subtitle {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.diagram-container {
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 250px;
+  height: auto !important;
+}
+
+#mermaidDiagram {
+  width: 100% !important;
+  height: auto !important;
+}
+
+#mermaidDiagram svg {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+}
+
+.mermaid {
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.resizable-diagram-container {
+  width: 100%;
+  max-width: 100%;
+  height: auto !important;
+  min-height: 250px;
+  max-height: 700px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .commitsection {

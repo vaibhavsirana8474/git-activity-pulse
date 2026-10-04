@@ -3,6 +3,12 @@ let sentimentChartInstance = null;
 let currentCommitData = [];
 let rawCommitsCache = [];
 
+mermaid.initialize({ 
+  startOnLoad: false, 
+  theme: 'default',
+  securityLevel: 'loose'
+});
+
 // Lightweight AFINN-based Sentiment Lexicon for Commit Messages
 const sentimentDictionary = {
   fixed: 2, fix: 2, resolve: 2, resolved: 2, clean: 2, cleaned: 2,
@@ -47,7 +53,6 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
   statusText.textContent = `Fetching commits for ${owner}/${repo}...`;
   statusText.style.color = "#555";
 
-
   document.getElementById("outputStatus").style.display = "none";
   document.getElementById("outputChart").style.display = "none";
 
@@ -66,9 +71,9 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
       rawCommitsCache = commits;
       processCommitData(commits);
       setupAuthorDropdown(commits);
-      statusText.textContent = `Successfully analyzed last ${commits.length} commits.`;
-      statusText.style.color = "green";
-      processCommitData(commits);
+      
+      fetchAndRenderArchitecture(owner, repo);
+
       statusText.textContent = `Successfully analyzed last ${commits.length} commits.`;
       statusText.style.color = "green";
     })
@@ -322,3 +327,116 @@ document.getElementById("resetDateBtn").addEventListener("click", () => {
   document.getElementById("endDate").value = "";
   applyFilters();
 });
+
+// Enhanced Architecture Map Generator with Multi-Tier Subgraphs & Dynamic Scaling
+async function fetchAndRenderArchitecture(owner, repo) {
+  const container = document.getElementById("mermaidDiagram");
+  if (!container) return;
+
+  container.textContent = "Analyzing repository layers and building deep architectural map...";
+
+  try {
+    const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    if (!repoRes.ok) throw new Error("Repository not found or API rate limit reached");
+    const repoData = await repoRes.json();
+    const defaultBranch = repoData.default_branch || "main";
+
+    const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`);
+    if (!treeRes.ok) throw new Error("Could not fetch repository file tree");
+    const treeData = await treeRes.json();
+
+    if (!treeData.tree || treeData.tree.length === 0) {
+      container.textContent = "No file structure found in this repository.";
+      return;
+    }
+
+    const items = treeData.tree;
+
+    const sourceDirs = [];
+    const configFiles = [];
+    const docFiles = [];
+    const testFiles = [];
+
+    items.forEach(item => {
+      const path = item.path.toLowerCase();
+      const parts = item.path.split('/');
+
+      if (parts.length === 1) {
+        if (item.type === 'tree') {
+          sourceDirs.push(parts[0]);
+        } else {
+          if (path.includes('readme') || path.includes('license')) docFiles.push(parts[0]);
+          else if (path.includes('test') || path.includes('config') || path.endsWith('.json') || path.endsWith('.js') || path.endsWith('.yml')) configFiles.push(parts[0]);
+          else configFiles.push(parts[0]);
+        }
+      } else {
+        if (parts.length === 2 && item.type === 'tree') {
+          if (!sourceDirs.includes(parts[0])) sourceDirs.push(parts[0]);
+        }
+      }
+    });
+
+    let mermaidCode = "graph TD;\n";
+    
+    mermaidCode += `    Root["📂 ${repoData.name}<br/><sub style='font-size:10px;'>🌟 Stars: ${repoData.stargazers_count} | 🍴 Forks: ${repoData.forks_count}</sub>"]:::rootStyle;\n`;
+
+    if (sourceDirs.length > 0) {
+      mermaidCode += `    subgraph CoreSource ["🏗️ Core Architecture & Directories"]\n`;
+      sourceDirs.slice(0, 12).forEach((dir, idx) => {
+        const safeId = `dir_${idx}`;
+        const safeName = dir.replace(/"/g, '\\"');
+        mermaidCode += `        ${safeId}["📁 ${safeName}"]:::sourceStyle;\n`;
+      });
+      mermaidCode += `    end\n`;
+      
+      sourceDirs.slice(0, Math.min(5, sourceDirs.length)).forEach((_, idx) => {
+        mermaidCode += `    Root -->|maps to| dir_${idx};\n`;
+      });
+    }
+
+    if (configFiles.length > 0) {
+      mermaidCode += `    subgraph Configurations ["⚙️ Configurations & Environment"]\n`;
+      configFiles.slice(0, 8).forEach((file, idx) => {
+        const safeId = `cfg_${idx}`;
+        const safeName = file.replace(/"/g, '\\"');
+        mermaidCode += `        ${safeId}["📄 ${safeName}"]:::configStyle;\n`;
+      });
+      mermaidCode += `    end\n`;
+
+      if (configFiles.length > 0) {
+        mermaidCode += `    Root -->|controlled by| cfg_0;\n`;
+      }
+    }
+
+
+    if (docFiles.length > 0) {
+      mermaidCode += `    subgraph Documentation ["📚 Documentation & Meta"]\n`;
+      docFiles.slice(0, 5).forEach((doc, idx) => {
+        const safeId = `doc_${idx}`;
+        const safeName = doc.replace(/"/g, '\\"');
+        mermaidCode += `        ${safeId}["📖 ${safeName}"]:::docStyle;\n`;
+      });
+      mermaidCode += `    end\n`;
+      
+      mermaidCode += `    Root -->|documented by| doc_0;\n`;
+    }
+
+    mermaidCode += `    classDef rootStyle fill:#0969da,stroke:#044289,color:#fff,stroke-width:2px;\n`;
+    mermaidCode += `    classDef sourceStyle fill:#f0fdf4,stroke:#22c55e,color:#166534,stroke-width:1.5px;\n`;
+    mermaidCode += `    classDef configStyle fill:#eff6ff,stroke:#3b82f6,color:#1e40af,stroke-width:1.5px;\n`;
+    mermaidCode += `    classDef docStyle fill:#fefce8,stroke:#eab308,color:#713f12,stroke-width:1.5px;\n`;
+
+
+    container.innerHTML = "";
+    if (typeof mermaid !== 'undefined') {
+      const id = 'mermaid-' + Math.random().toString(36).substring(2, 9);
+      const { svg } = await mermaid.render(id, mermaidCode);
+      container.innerHTML = svg;
+    } else {
+      container.textContent = mermaidCode;
+    }
+
+  } catch (err) {
+    container.textContent = `Unable to generate deep architecture map: ${err.message}`;
+  }
+}
