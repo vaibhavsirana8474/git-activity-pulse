@@ -3,10 +3,21 @@ let sentimentChartInstance = null;
 let currentCommitData = [];
 let rawCommitsCache = [];
 
+// Pagination state variables
+let currentPage = 1;
+const rowsPerPage = 10; 
+let allCommitsData = [];
+
 mermaid.initialize({ 
   startOnLoad: false, 
   theme: 'default',
-  securityLevel: 'loose'
+  securityLevel: 'loose',
+  flowchart: {
+    useMaxWidth: true,
+    htmlLabels: true,
+    nodeSpacing: 40,
+    rankSpacing: 50
+  }
 });
 
 // Lightweight AFINN-based Sentiment Lexicon for Commit Messages
@@ -86,12 +97,12 @@ document.getElementById("analyzeBtn").addEventListener("click", () => {
 
 function processCommitData(commits) {
   currentCommitData = commits.map((item, index) => {
-  const message = item.commit.message.replace(/"/g, '""'); // Escape double quotes for CSV
-  const author = item.commit.author.name || "Unknown";
-  const date = item.commit.author.date;
-  const score = scoreSentiment(item.commit.message);
-  return { index: commits.length - index, author, date, message, score };
-});
+    const message = item.commit.message.replace(/"/g, '""');
+    const author = item.commit.author.name || "Unknown";
+    const date = item.commit.author.date;
+    const score = scoreSentiment(item.commit.message);
+    return { index: commits.length - index, author, date, message, score };
+  });
 
   const hourCounts = new Array(24).fill(0);
   const sentiments = [];
@@ -105,20 +116,16 @@ function processCommitData(commits) {
     const hour = date.getHours();
     const author = item.commit.author.name || "Unknown";
 
-    // Track hours
     hourCounts[hour]++;
     if (hour >= 22 || hour <= 5) lateNightCount++;
 
-    // Track sentiment
     const score = scoreSentiment(message);
-    sentiments.push({ index: commits.length - index, score, message });
+    sentiments.push({ index: commits.length - index, score, message, author });
     totalSentiment += score;
 
-    // Track author counts
     authorCounts[author] = (authorCounts[author] || 0) + 1;
   });
 
-  // Calculate high-level KPIs
   const total = commits.length;
   const avgSentiment = (totalSentiment / total).toFixed(2);
   const crunchRate = Math.round((lateNightCount / total) * 100);
@@ -132,7 +139,6 @@ function processCommitData(commits) {
     }
   }
 
-  // Update UI Elements
   document.getElementById("totalCommits").textContent = total;
   document.getElementById("totalSentiment").textContent =
     avgSentiment > 0.1 ? `+${avgSentiment} (Optimistic)` :
@@ -144,18 +150,16 @@ function processCommitData(commits) {
   document.getElementById("outputChart").style.display = "grid";
 
   renderCharts(hourCounts, sentiments);
-  renderTable(sentiments);
+  renderCommitTable(sentiments);
   document.getElementById("commitSection").style.display = "block";
 }
 
 function renderCharts(hourCounts, sentimentData) {
   const hoursLabels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-  // Destroy previous charts if they exist to prevent overlapping
   if (activityChartInstance) activityChartInstance.destroy();
   if (sentimentChartInstance) sentimentChartInstance.destroy();
 
-  // 1. Activity Heatmap Chart (Bar Chart)
   const ctxActivity = document.getElementById("activityChart").getContext("2d");
   activityChartInstance = new Chart(ctxActivity, {
     type: "bar",
@@ -178,7 +182,6 @@ function renderCharts(hourCounts, sentimentData) {
     }
   });
 
-  // 2. Sentiment Trend Chart (Line Chart)
   const ctxSentiment = document.getElementById("sentimentChart").getContext("2d");
   sentimentChartInstance = new Chart(ctxSentiment, {
     type: "line",
@@ -202,14 +205,32 @@ function renderCharts(hourCounts, sentimentData) {
   });
 }
 
-function renderTable(sentiments) {
-  const tableBody = document.getElementById("commitTableBody");
-  tableBody.innerHTML = "";
+// --- Pagination & Table Rendering Functions ---
+function renderCommitTable(commits) {
+  allCommitsData = commits;
+  currentPage = 1; 
+  displayCommitPage();
+}
 
-  sentiments.forEach((item) => {
+function displayCommitPage() {
+  const tbody = document.getElementById('commitTableBody');
+  const paginationContainer = document.getElementById('paginationContainer');
+  tbody.innerHTML = '';
+  
+  if (!allCommitsData || allCommitsData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No commits found for this selection.</td></tr>`;
+    if (paginationContainer) paginationContainer.innerHTML = '';
+    return;
+  }
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedCommits = allCommitsData.slice(startIndex, endIndex);
+
+  paginatedCommits.forEach((item, index) => {
+    const score = item.score;
     const author = item.author || "Unknown";
     const message = item.message;
-    const score = item.score;
 
     let badgeClass = "badge-neutral";
     let badgeText = "Neutral";
@@ -223,19 +244,55 @@ function renderTable(sentiments) {
       badgeText = `Neutral (${score})`;
     }
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
       <td>#${item.index}</td>
       <td><strong>${escapeHtml(author)}</strong></td>
       <td>${escapeHtml(message)}</td>
       <td><span class="badge ${badgeClass}">${badgeText}</span></td>
     `;
-    tableBody.appendChild(row);
+    tbody.appendChild(tr);
+  });
+
+  renderPaginationControls();
+}
+
+function renderPaginationControls() {
+  const paginationContainer = document.getElementById('paginationContainer');
+  if (!paginationContainer) return;
+  
+  const totalPages = Math.ceil(allCommitsData.length / rowsPerPage);
+
+  if (totalPages <= 1) {
+    paginationContainer.innerHTML = `<span>Showing all ${allCommitsData.length} commits</span>`;
+    return;
+  }
+
+  paginationContainer.innerHTML = `
+    <span>Showing page ${currentPage} of ${totalPages} (${allCommitsData.length} total commits)</span>
+    <div class="pagination-buttons">
+      <button class="page-btn" id="prevPageBtn" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+      <button class="page-btn" id="nextPageBtn" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+    </div>
+  `;
+
+  document.getElementById('prevPageBtn').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      displayCommitPage();
+    }
+  });
+
+  document.getElementById('nextPageBtn').addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      displayCommitPage();
+    }
   });
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 document.getElementById("exportCsvBtn").addEventListener("click", () => {
@@ -249,8 +306,6 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
   });
 
   const csvString = csvRows.join("\n");
-  
-
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -263,9 +318,6 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
   document.body.removeChild(link);
 });
 
-// --- NEW UNIFIED FILTER CODE (Author + Date Range) ---
-
-// Populate the select dropdown with unique authors
 function setupAuthorDropdown(commits) {
   const select = document.getElementById("authorSelect");
   select.innerHTML = '<option value="all">All Contributors</option>';
@@ -282,7 +334,6 @@ function setupAuthorDropdown(commits) {
   document.getElementById("filterSection").style.display = "flex";
 }
 
-// Master Filter Function combining Author & Date Range
 function applyFilters() {
   if (!rawCommitsCache || rawCommitsCache.length === 0) return;
 
@@ -291,11 +342,9 @@ function applyFilters() {
   const endDateVal = document.getElementById("endDate").value;
 
   const filtered = rawCommitsCache.filter(item => {
-    // 1. Author Check
     const author = item.commit.author.name || "Unknown";
     const matchesAuthor = (selectedAuthor === "all" || author === selectedAuthor);
 
-    // 2. Date Range Check
     const commitDate = new Date(item.commit.author.date);
     let matchesStartDate = true;
     let matchesEndDate = true;
@@ -328,7 +377,6 @@ document.getElementById("resetDateBtn").addEventListener("click", () => {
   applyFilters();
 });
 
-// Enhanced Architecture Map Generator with Multi-Tier Subgraphs & Dynamic Scaling
 async function fetchAndRenderArchitecture(owner, repo) {
   const container = document.getElementById("mermaidDiagram");
   if (!container) return;
@@ -351,11 +399,9 @@ async function fetchAndRenderArchitecture(owner, repo) {
     }
 
     const items = treeData.tree;
-
     const sourceDirs = [];
     const configFiles = [];
     const docFiles = [];
-    const testFiles = [];
 
     items.forEach(item => {
       const path = item.path.toLowerCase();
@@ -366,18 +412,14 @@ async function fetchAndRenderArchitecture(owner, repo) {
           sourceDirs.push(parts[0]);
         } else {
           if (path.includes('readme') || path.includes('license')) docFiles.push(parts[0]);
-          else if (path.includes('test') || path.includes('config') || path.endsWith('.json') || path.endsWith('.js') || path.endsWith('.yml')) configFiles.push(parts[0]);
           else configFiles.push(parts[0]);
         }
-      } else {
-        if (parts.length === 2 && item.type === 'tree') {
-          if (!sourceDirs.includes(parts[0])) sourceDirs.push(parts[0]);
-        }
+      } else if (parts.length === 2 && item.type === 'tree') {
+        if (!sourceDirs.includes(parts[0])) sourceDirs.push(parts[0]);
       }
     });
 
     let mermaidCode = "graph TD;\n";
-    
     mermaidCode += `    Root["📂 ${repoData.name}<br/><sub style='font-size:10px;'>🌟 Stars: ${repoData.stargazers_count} | 🍴 Forks: ${repoData.forks_count}</sub>"]:::rootStyle;\n`;
 
     if (sourceDirs.length > 0) {
@@ -408,7 +450,6 @@ async function fetchAndRenderArchitecture(owner, repo) {
       }
     }
 
-
     if (docFiles.length > 0) {
       mermaidCode += `    subgraph Documentation ["📚 Documentation & Meta"]\n`;
       docFiles.slice(0, 5).forEach((doc, idx) => {
@@ -426,12 +467,24 @@ async function fetchAndRenderArchitecture(owner, repo) {
     mermaidCode += `    classDef configStyle fill:#eff6ff,stroke:#3b82f6,color:#1e40af,stroke-width:1.5px;\n`;
     mermaidCode += `    classDef docStyle fill:#fefce8,stroke:#eab308,color:#713f12,stroke-width:1.5px;\n`;
 
-
     container.innerHTML = "";
     if (typeof mermaid !== 'undefined') {
       const id = 'mermaid-' + Math.random().toString(36).substring(2, 9);
       const { svg } = await mermaid.render(id, mermaidCode);
       container.innerHTML = svg;
+      
+      const svgElement = container.querySelector('svg');
+      if (svgElement) {
+        if (!svgElement.getAttribute('viewBox')) {
+          const w = svgElement.getAttribute('width') || 1200;
+          const h = svgElement.getAttribute('height') || 800;
+          svgElement.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+        }
+        svgElement.removeAttribute('width');
+        svgElement.removeAttribute('height');
+        svgElement.style.width = '100%';
+        svgElement.style.height = 'auto';
+      }
     } else {
       container.textContent = mermaidCode;
     }

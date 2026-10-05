@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Git Commit Sentiment & Activity Pulse</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Chart.js CDN for data visualization. Open source library for data visualisation -->
+  <!-- Chart.js CDN for data visualization -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Mermaid.js CDN for architecture diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <!-- SVG Pan-Zoom for architecture diagram interaction -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -16,7 +18,6 @@
       <h1>Git Commit Pulse & Sentiment Tracker</h1>
       <p>Analyze developer velocity, late-night crunch hours, and commit sentiment.</p>
     </header>
-
 
     <section class="search-box">
       <input type="text" id="ownerInput" placeholder="Repo Owner Name" />
@@ -29,53 +30,67 @@
       <span id="statusText">Enter a repository to start analysis.</span>
     </div>
 
-    <section class="outputStatus" id="outputStatus" style="display: none;">
-
-      <div class="downloadOption">
-        <button id="exportCsvBtn" class="btn-secondary">📥 Export Data to CSV</button>
+    <!-- Dashboard Controls & Metrics Header -->
+    <div class="dashboard-controls" id="outputStatus" style="display: none;">
+      <div class="metrics-header-row">
+        <div class="export-action">
+          <button id="exportCsvBtn" class="btn-secondary">📥 Export CSV</button>
+        </div>
+        <div class="metrics-grid">
+          <div class="card">
+            <h3>Total Commits</h3>
+            <p id="totalCommits">0</p>
+          </div>
+          <div class="card">
+            <h3>Overall Sentiment</h3>
+            <p id="totalSentiment">--</p>
+          </div>
+          <div class="card">
+            <h3>Late Night Crunch Rate</h3>
+            <p id="crunchRate">0%</p>
+          </div>
+          <div class="card">
+            <h3>Top Contributor</h3>
+            <p id="topContributor">--</p>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>Total Commits</h3>
-        <p id="totalCommits">0</p>
-      </div>
-      <div class="card">
-        <h3>Overall Sentiment</h3>
-        <p id="totalSentiment">--</p>
-      </div>
-      <div class="card">
-        <h3>Late Night Crunch Rate</h3>
-        <p id="crunchRate">0%</p>
-      </div>
-      <div class="card">
-        <h3>Top Contributor</h3>
-        <p id="topContributor">--</p>
-      </div>
-    </section>
-
+      <!-- Filters Section -->
       <section class="filter-section" id="filterSection" style="display: none;">
-      <div class="filter-container">
-        <!-- Author Filter -->
-        <div class="filter-group">
-          <label for="authorSelect"><strong>Contributor:</strong></label>
-          <select id="authorSelect">
-            <option value="all">All Contributors</option>
-          </select>
-        </div>
+        <div class="filter-toolbar">
+          <div class="filter-block">
+            <span class="filter-label">Contributor</span>
+            <div class="select-wrapper">
+              <select id="authorSelect" class="custom-select">
+                <option value="all" class="custom-select-text">All Contributors</option>
+              </select>
+            </div>
+          </div>
 
-        <!-- Date Range Filter -->
-        <div class="filter-group">
-          <label for="startDate"><strong>From:</strong></label>
-          <input type="date" id="startDate">
-        </div>
-        <div class="filter-group">
-          <label for="endDate"><strong>To:</strong></label>
-          <input type="date" id="endDate">
-        </div>
-        <button id="resetDateBtn" class="btn-reset">Reset Dates</button>
-      </div>
-    </section>
+          <div class="filter-separator"></div>
 
+          <div class="filter-block date-range-block">
+            <div class="date-field">
+              <span class="filter-label">From</span>
+              <div class="date-input-wrapper">
+                <input type="date" id="startDate" class="custom-input modern-date" data-placeholder="Select date">
+              </div>
+            </div>
+            <span class="date-separator">—</span>
+            <div class="date-field">
+              <span class="filter-label">To</span>
+              <div class="date-input-wrapper">
+                <input type="date" id="endDate" class="custom-input modern-date" data-placeholder="Select date">
+              </div>
+            </div>
+            <button id="resetDateBtn" class="btn-reset">Reset</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Analytics & Architecture Charts -->
     <section class="outputChart" id="outputChart" style="display: none;">
       <div class="chart-container">
         <h3>Activity Heatmap (Hour of Day)</h3>
@@ -97,6 +112,7 @@
       </div>
     </section>
 
+    <!-- Commit Table Section -->
     <section class="commit-section" id="commitSection" style="display: none;">
       <h3>Recent Commits & Sentiment Breakdown</h3>
       <div class="table-responsive">
@@ -114,6 +130,7 @@
           </tbody>
         </table>
       </div>
+      <div id="paginationContainer" class="pagination-container"></div>
     </section>
   </div>
 
